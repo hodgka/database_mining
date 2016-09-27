@@ -6,114 +6,87 @@
 #         Uses Python 3.5          #
 ####################################
 
-import argparse
+
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 from collections import Counter
 import sys
 import re
-from sklearn.decomposition import PCA, KernelPCA
 
-np.set_printoptions(precision=4, linewidth=80, suppress=True)
-
-##########################################################################
-##########################################################################
-# Takes 3 arguments with flags -fname, -func, and -eps(optional).
-# The arguments are the filename to parse data from, the function you want to
-# execute, and the value of epsilon you want to use.
-##########################################################################
-##########################################################################
-# Possible function arguments include: mean, variance, "covariance inner",
-# "covariance outer", correlation, eigenvector, and all
-##########################################################################
-##########################################################################
-# Epsilon value should be given in the format " 10e-10"
-##########################################################################
-##########################################################################
-# parser = argparse.ArgumentParser(description="Database Mining Homework 2")
-# parser.add_argument('-fname', metavar='filename', type=str,
-#                     default='airfoil_self_noise.txt',
-#                     help='File to collect data from.')
-# parser.add_argument('-func', metavar="function", type=str, default='mean',
-#                     help="Function to call.")
-# parser.add_argument('-eps', metavar="epsilon", type=float,
-#                     help="Value for epsilon.")
-# args = parser.parse_args()
+np.set_printoptions(precision=4, linewidth=80, threshold=np.inf, suppress=True)
 
 
-def create_kernel(data, kfunc=None, spread=1):
-    assert(type(kfunc) == str)
+def KPCA(data, kfunc=None, num=0, alpha=0.95, spread=1):
+    n, d = np.shape(data)
     if kfunc is None or kfunc.lower() == 'linear':
         K = np.dot(data, data.T)
+        print(np.shape(K))
     else:
-        K = np.exp(np)
+        K = np.dot(data, data.T) / (spread ** 2)
+        # print(K)
+        d = np.diag(K)
+        K = K - np.ones(n, 1)*d.T/2
+        print(d)
 
-    n = np.shape(data)[0]
-    A = np.eye(n) - np.ones((n, n))/n
-    K = np.dot(A, np.dot(K.T, A))
+    # center kernel matrix
+    # n = np.shape(data)[0]
+    # A = np.eye(n) - np.ones((n, n))/n
+    # K = np.dot(A, np.dot(K.T, A))
+    #
+    # # eigenvalue/vector stuff
+    # nu, c = np.linalg.eigh(K)
+    # nu = nu[::-1]
+    # c = c[:, ::-1]
+    #
+    # # eigh produces a nxn matrix of eigen_vecs, but only first d are unique
+    # nu = nu[:d]
+    # c = c[:, :d]
+    #
+    # sqrt_lambda = np.sqrt(nu)
+    # c = np.nan_to_num(np.divide(c, sqrt_lambda))
+    #
+    # lamb = nu/float(n)
+    # if num == 0:
+    #     total_lambda = np.sum(lamb)
+    #     lambda_sum = 0.0
+    #     i = 0
+    #     while lambda_sum/total_lambda < alpha:
+    #         lambda_sum += lamb[i]
+    #         i += 1
+    #     nu, c = nu[:i], c[:, :i]
+    #     print('ayy"')
+    #     print(np.shape(nu))
+    #     print(np.shape(c))
+    # else:
+    #     nu, c = nu[:num], c[:, :num]
+    # return np.dot(K, c)
 
-    return K
 
-# def normalize_kernel(K):
-    w = np.diag(1./np.sqrt(np.diag(K)))
-    K_normalized = np.dot(w, np.dot(K.T, w))
-    return K_normalized
+def PCA(data, num=0, alpha=0.95):
+    # center the data
+    mean = np.mean(data, axis=0)
+    Z = data - mean
 
+    # calculate covariance matrix and eigen values is descending order
+    # 9x9 matrix
+    Sigma = np.cov(Z.T)
+    eigen_vals, eigen_vecs = np.linalg.eigh(Sigma)
+    eigen_vals = eigen_vals[::-1]
+    eigen_vecs = eigen_vecs[:, ::-1]
 
-def dominant_eigenvectors(K, n=0, alpha=None):
-    eigen_val, eigen_vec = np.linalg.eigh(K)
-    eigen_val = eigen_val[::-1]
-    eigen_vec = eigen_vec[:, ::-1]
-    lambda_i = eigen_val/float(np.shape(K)[0])
-    # TODO need to scale eigen vectors and finish KPCA
-    # eigen_vec = np.nan_to_num(np.divide(eigen_vec, inv_sqrt_lambda))
-    if n != 0:
-        # if n is specified, return n dominant dimensions
-        print(eigen_vec)
-        return (eigen_val[:n], eigen_vec[:, :n])
-    elif alpha is not None:
-        # if alpha is specified, then find the r dominant dimensions
-        total_lambda = np.sum(eigen_val)
-        lambda_sum = 0
+    # use alpha to compute fraction of total variance
+    if num == 0:
+        total_lambda = np.sum(eigen_vals)
         i = 0
-        while float(lambda_sum)/total_lambda < alpha:
-            lambda_sum += eigen_val[i]
+        lambda_sum = 0.0
+        while lambda_sum/total_lambda < alpha:
+            lambda_sum += eigen_vals[i]
             i += 1
-        print(eigen_vec)
-        return (eigen_val[:i], eigen_vec[:, :i])
+        eigen_vecs = eigen_vecs[:, :i]
     else:
-        return(eigen_val[:], eigen_vec[:, :])
-
-
-def reduce_data_dimensionality(K, C):
-    return np.dot(C.T, K)
-
-
-def create_covariance(data):
-    return np.cov(data.T)
-
-
-def dominant_pca_eigenvectors(S, n=0, alpha=None):
-    eigen_val, eigen_vec = np.linalg.eigh(S)
-    eigen_val = eigen_val[::-1]
-    eigen_vec = eigen_vec[:, ::-1]
-    if n != 0:
-        # if n is specified, return n dominant dimensions
-        print(eigen_vec)
-        return (eigen_val[:n], eigen_vec[:, :n])
-    elif alpha is not None:
-        # if alpha is specified, then find the r dominant dimensions
-        total_lambda = np.sum(eigen_val)
-        lambda_sum = 0
-        i = 0
-        while float(lambda_sum)/total_lambda < alpha:
-            lambda_sum += eigen_val[i]
-            i += 1
-        print(eigen_vec)
-        return (eigen_val[:i], eigen_vec[:, :i])
-    else:
-        print("Alpha is None")
+        eigen_vecs = eigen_vecs[:, :num]
+    return np.dot(Z, eigen_vecs)
 
 
 def epmf(n=100000, d=10):
@@ -137,6 +110,9 @@ def epmf(n=100000, d=10):
     for key, value in C.items():
         C[key] = value / float(total)
     plt.bar(C.keys(), C.values(), color='g')
+    plt.xlabel("angle(degrees)")
+    plt.ylabel("percent of diagonals")
+    plt.savefig("Assign2_Hodgkinson_Alec_d{0}".format(d))
     plt.show()
 
     keys = np.array(list(C.keys()))
@@ -149,20 +125,11 @@ def epmf(n=100000, d=10):
     return (min_key, max_key, value_range, mean, variance)
 
 
-
-def test():
+# def test():
 
     ###########
     #  part 1 #
     ###########
-
-    kernel_data = np.array([[540, 162, 2.5], [540, 162, 2.5], [332.5, 228, 0]])
-    # K = create_kernel(kernel_data, 'linear')
-    # K = center_kernel(K)
-    # eigen_vals, eigen_vecs = dominant_eigenvectors(K)
-    # print(eigen_vals)
-    # print(eigen_vecs)
-    # print(K)
 
     ###########
     #  part 2 #
@@ -181,29 +148,25 @@ if __name__ == "__main__":
         d = f.read()
         data = np.array(list(map(float, re.split(r'[,\n]', d)[:-1])))
         data = data.reshape((-1, 9))
+    spread = sys.argv[2]
 
-    test()
-    # K = create_kernel(data, "linear")
-    # K_normalized = normalize_kernel(K)
-    # C = dominant_eigenvectors(K_normalized, n=2, alpha=0.95)[1]
-    # # print(C)
-    # A = reduce_data_dimensionality(K, C)
-    # print(np.shape(K))
-    # print((C))
-    # # for i in range(9):
-    # #     for i in range():
-    # #         plt.scatter(data[:, i], data[:, j])
+    # print(data)
+    PA = PCA(data, num=2)
+    # test()
+    # KA = KPCA(data, "linear", num=2)
+    #
+    GA = KPCA(data, 'gaussian', num=2, spread=float(spread))
     # # plt.scatter(data[:, 8], data[:, 7])
     # fig = plt.figure()
-    # plt.subplot(121)
-    # plt.scatter(A[0], A[1])
-    # # plt.show()
-    # # variance = float(sys.argv[2])
-    # S = create_covariance(data)
-    # C_pca = dominant_pca_eigenvectors(S, 2)[1]
-    # A_pca = np.dot(data, C_pca)
-    # print(np.shape(A_pca))
-    # # print(C_pca)
-    # plt.subplot(122)
-    # plt.scatter(A_pca[:, 0], A_pca[:, 1])
+    # plt.subplot(131)
+    # plt.scatter(KA[:, 0], KA[:, 1])
+    # plt.xlabel("Linear KPCA")
+    #
+    # plt.subplot(132)
+    # plt.scatter(PA[:, 0], PA[:, 1])
+    # plt.xlabel("PCA")
+    #
+    # plt.subplot(133)
+    # plt.scatter(GA[:, 0], GA[:, 1])
+    # plt.xlabel("Gaussian KPCA")
     # plt.show()
