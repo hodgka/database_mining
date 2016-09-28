@@ -1,0 +1,11 @@
+Alec Hodgkinson
+Database Mining
+9/27/16
+
+Coded using python 3.5
+
+
+Five dimensions are required to capture 95% of the variance with a linear kernel
+
+The eigenvalues for both PCA and KPCA with a linear kernel.
+The eigenvectors are not necessarily the same since K will probably be a different size than S

@@ -13,8 +13,27 @@ import itertools
 from collections import Counter
 import sys
 import re
+import scipy.stats as st
 
 np.set_printoptions(precision=4, linewidth=80, threshold=np.inf, suppress=True)
+
+
+def gaussian_kernel(data, spread):
+    n, d = np.shape(data)
+    K = np.zeros(shape=(n, n))
+
+    def gaussian(x, y, spread):
+        return np.exp((-(np.linalg.norm(x-y)**2))/(2*spread**2))
+
+    X = np.asarray(data)
+    i = 0
+    for x in X:
+        j = 0
+        for y in X:
+            K[i, j] = gaussian(x.T, y.T, spread)
+            j += 1
+        i += 1
+    return K
 
 
 def KPCA(data, kfunc=None, num=0, alpha=0.95, spread=1):
@@ -23,46 +42,39 @@ def KPCA(data, kfunc=None, num=0, alpha=0.95, spread=1):
         K = np.dot(data, data.T)
         print(np.shape(K))
     else:
-        K = np.dot(data, data.T) / (spread ** 2)
-        # print(K)
-        d = np.diag(K)
-        K = K - np.ones((n, n))*d/2
-        K = K - (np.ones((n, n))*d).T/2
-        K = np.exp(K)
-        print(K)
+        K = gaussian_kernel(data, spread)
 
     # center kernel matrix
-    # n = np.shape(data)[0]
-    # A = np.eye(n) - np.ones((n, n))/n
-    # K = np.dot(A, np.dot(K.T, A))
-    #
-    # # eigenvalue/vector stuff
-    # nu, c = np.linalg.eigh(K)
-    # nu = nu[::-1]
-    # c = c[:, ::-1]
-    #
-    # # eigh produces a nxn matrix of eigen_vecs, but only first d are unique
-    # nu = nu[:d]
-    # c = c[:, :d]
-    #
-    # sqrt_lambda = np.sqrt(nu)
-    # c = np.nan_to_num(np.divide(c, sqrt_lambda))
-    #
-    # lamb = nu/float(n)
-    # if num == 0:
-    #     total_lambda = np.sum(lamb)
-    #     lambda_sum = 0.0
-    #     i = 0
-    #     while lambda_sum/total_lambda < alpha:
-    #         lambda_sum += lamb[i]
-    #         i += 1
-    #     nu, c = nu[:i], c[:, :i]
-    #     print('ayy"')
-    #     print(np.shape(nu))
-    #     print(np.shape(c))
-    # else:
-    #     nu, c = nu[:num], c[:, :num]
-    # return np.dot(K, c)
+    n = np.shape(data)[0]
+    A = np.eye(n) - np.ones((n, n))/n
+    K = np.dot(A, np.dot(K.T, A))
+
+    # eigenvalue/vector stuff
+    nu, eigen_vecs = np.linalg.eigh(K)
+    nu = nu[::-1]
+    eigen_vecs = eigen_vecs[:, ::-1]
+
+    # eigh produces a nxn matrix of eigen_vecs, but only first d are unique
+    nu = nu[:d]
+    print(eigen_vecs[:, 10])
+    eigen_vecs = eigen_vecs[:, :d]
+
+    sqrt_lambda = np.sqrt(nu)
+    # eigen_vecs = np.nan_to_num(np.divide(eigen_vecs, sqrt_lambda))
+
+    lamb = nu/float(n)
+    if num == 0:
+        total_lambda = np.sum(lamb)
+        lambda_sum = 0.0
+        i = 0
+        while lambda_sum/total_lambda < alpha:
+            lambda_sum += lamb[i]
+            i += 1
+        nu, eigen_vecs = nu[:i], eigen_vecs[:, :i]
+    else:
+        nu, eigen_vecs = nu[:num], eigen_vecs[:, :num]
+    print("KERNEL: ", eigen_vecs)
+    return np.dot(K, eigen_vecs)
 
 
 def PCA(data, num=0, alpha=0.95):
@@ -88,7 +100,12 @@ def PCA(data, num=0, alpha=0.95):
         eigen_vecs = eigen_vecs[:, :i]
     else:
         eigen_vecs = eigen_vecs[:, :num]
+    print("PCA: ", eigen_vecs)
     return np.dot(Z, eigen_vecs)
+
+
+##########################################################################
+##########################################################################
 
 
 def epmf(n=100000, d=10):
@@ -114,7 +131,7 @@ def epmf(n=100000, d=10):
     plt.bar(C.keys(), C.values(), color='g')
     plt.xlabel("angle(degrees)")
     plt.ylabel("percent of diagonals")
-    plt.savefig("Assign2_Hodgkinson_Alec_d{0}".format(d))
+    plt.savefig("Assign2_Hodgkinson_Alec_P2_d{0}".format(d))
     plt.show()
 
     keys = np.array(list(C.keys()))
@@ -126,20 +143,6 @@ def epmf(n=100000, d=10):
 
     return (min_key, max_key, value_range, mean, variance)
 
-
-# def test():
-
-    ###########
-    #  part 1 #
-    ###########
-
-    ###########
-    #  part 2 #
-    ###########
-    # print(epmf())
-    # print(epmf(d=100))
-    # print(epmf(d=1000))
-
 ##########################################################################
 ##########################################################################
 
@@ -150,25 +153,28 @@ if __name__ == "__main__":
         d = f.read()
         data = np.array(list(map(float, re.split(r'[,\n]', d)[:-1])))
         data = data.reshape((-1, 9))
-    spread = sys.argv[2]
 
-    # print(data)
+    spread1 = sys.argv[2]
+
+    KA = KPCA(data, "linear", num=2)
     PA = PCA(data, num=2)
-    # test()
-    # KA = KPCA(data, "linear", num=2)
-    #
-    GA = KPCA(data, 'gaussian', num=2, spread=float(spread))
-    # # plt.scatter(data[:, 8], data[:, 7])
-    # fig = plt.figure()
-    # plt.subplot(131)
-    # plt.scatter(KA[:, 0], KA[:, 1])
-    # plt.xlabel("Linear KPCA")
-    #
-    # plt.subplot(132)
-    # plt.scatter(PA[:, 0], PA[:, 1])
-    # plt.xlabel("PCA")
-    #
-    # plt.subplot(133)
-    # plt.scatter(GA[:, 0], GA[:, 1])
-    # plt.xlabel("Gaussian KPCA")
-    # plt.show()
+    GA1 = KPCA(data, 'gaussian', num=2, spread=float(spread1))
+
+    fig = plt.figure()
+    plt.subplot(131)
+    plt.scatter(KA[:, 0], KA[:, 1])
+    plt.xlabel("Linear KPCA")
+
+    plt.subplot(132)
+    plt.scatter(PA[:, 0], PA[:, 1])
+    plt.xlabel("PCA")
+
+    plt.subplot(133)
+    plt.scatter(GA1[:, 0], GA1[:, 1])
+    plt.xlabel("Gaussian KPCA")
+    plt.savefig("Assign2_Hodgkinson_Alec_P1")
+    plt.show()
+
+    print(epmf(d=10))
+    print(epmf(d=100))
+    print(epmf(d=1000))
