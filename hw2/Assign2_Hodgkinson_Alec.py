@@ -26,8 +26,10 @@ def KPCA(data, kfunc=None, num=0, alpha=0.95, spread=1):
         K = np.dot(data, data.T) / (spread ** 2)
         # print(K)
         d = np.diag(K)
-        K = K - np.ones(n, 1)*d.T/2
-        print(d)
+        K = K - np.ones((n, n))*d/2
+        K = K - (np.ones((n, n))*d).T/2
+        K = np.exp(K)
+        print(K)
 
     # center kernel matrix
     # n = np.shape(data)[0]
