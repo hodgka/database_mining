@@ -4,8 +4,13 @@ Database Mining
 
 Coded using python 3.5
 
+******************************************************************************
+******************************************************************************
 
 Five dimensions are required to capture 95% of the variance with a linear kernel
 
-The eigenvalues for both PCA and KPCA with a linear kernel.
-The eigenvectors are not necessarily the same since K will probably be a different size than S
+The eigenvalues are the same for PCA and KPCA with a linear kernel.
+The projection will probably be different since K is usually not the same size as S
+
+
+The value of spread used was 342
