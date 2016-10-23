@@ -36,7 +36,9 @@ def compute_K(data, t=None):
     if t is None or t.lower() == "linear":
         K = np.dot(x, x.T)
     elif t.lower() == 'quadratic':
-        K = np.linalg.matrix_power(np.dot(x, x.T), 2)
+        # K = np.linalg.matrix_power(np.dot(x, x.T), 2)
+        xxt = np.dot(x, x.T)
+        K = np.dot(xxt, xxt.T)
 
     else:
         K = gaussian_kernel(x, spread)
