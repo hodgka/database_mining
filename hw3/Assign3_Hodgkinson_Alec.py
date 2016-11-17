@@ -120,7 +120,7 @@ def compute_L_H(yi, yj, C, ai, aj):
 def compute_E_ij(a, y, K, i, j):
     ei = np.sum(a*y*K[:, i]) - y[i]
     ej = np.sum(a*y*K[:, j]) - y[j]
-    return ei1-ej1
+    return ei-ej
 
 
 def get_support_vectors(data, a):
@@ -134,7 +134,9 @@ def get_support_vectors(data, a):
 def compute_bias(y, a, K, C, tol):
     ytemp = np.copy(y)
     ytemp[a <= 0] = 0
-    b = ytemp - np.sum(alpha*ytemp*K[:, :], axis=0)
+    b = ytemp - np.sum(a*ytemp*K[:, :], axis=0)
+    # print(np.shape(ytemp))
+    # print(np.shape(np.sum(a*ytemp*K[:, :], axis=1)))
     return np.mean(b)
 
 
@@ -168,13 +170,13 @@ if __name__ == "__main__":
     # print(SMO(K, data, C, eps))
     a, a_f = SMO(K, data, C, eps)
     svs = get_support_vectors(data, a_f)
-    b = compute_bias(data, a, K, C, 10**-5)
-    acc = compute_accuracy(data, K, a, b, C, 10**-5)
+    b = compute_bias(y, a, K, C, 10**-5)
+    acc = compute_accuracy(y, K, a, b, C, 10**-5)
     if args.w is not None:
         with open("Assign3_Hodgkinson_Alec.txt", 'w') as f:
             f.write("Kernel type: {0}\n Support Vectors: {1}\n Bias: {2}\n\
                     Accuracy {3}".format(args.kernel_type, svs, b, acc))
-    print("Kernel Type: {0}")
+    print("Kernel Type: ", args.kernel_type)
     print("Support Vector Lagrange Multipliers: ", a_f)
     print("Support vectors: \n", svs)
     print("Bis: ", b)

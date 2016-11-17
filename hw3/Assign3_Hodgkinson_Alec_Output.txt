@@ -1,3 +1,75 @@
+Iris-Virginica
+C = 1
+Epsilon = 0.001
+Kernel: Linear
+Support Vector Lagrange Multipliers:  [ 0.1317  0.2946  0.5576  0.2795]
+Support vectors:
+ [[ 5.1  3.5  1.4  0.2  1. ]
+ [ 4.9  3.   1.4  0.2  1. ]
+ [ 4.7  3.2  1.3  0.2  1. ]
+ [ 4.6  3.1  1.5  0.2  1. ]]
+Bis:  3.97724176802
+Accuracy:  0.993333333333
+
+-----------------------------------------------------------------------
+
+Iris-Virginica
+C = 1
+Epsilon = 0.001
+Kernel: Quadratic
+Support Vector Lagrange Multipliers:  [ 0.9638  0.3973  0.0967  0.4697]
+Support vectors:
+ [[ 5.1  3.5  1.4  0.2  1. ]
+ [ 4.9  3.   1.4  0.2  1. ]
+ [ 4.7  3.2  1.3  0.2  1. ]
+ [ 4.6  3.1  1.5  0.2  1. ]]
+Bis:  3.91095293623
+Accuracy:  0.953333333333
+
+
+-----------------------------------------------------------------------
+
+Iris-Versicolor
+C = 1
+Epsilon = 0.001
+Kernel: Linear
+Support Vector Lagrange Multipliers:  [ 0.9314  0.2973  0.2287]
+Support vectors:
+ [[ 5.1  3.5  1.4  0.2 -1. ]
+ [ 4.9  3.   1.4  0.2 -1. ]
+ [ 4.7  3.2  1.3  0.2 -1. ]]
+Bis:  6.51519020715
+Accuracy:  0.96
+
+-----------------------------------------------------------------------
+
+Iris-Versicolor
+C = 1
+Epsilon = 0.001
+Kernel: Quadratic
+Support Vector Lagrange Multipliers:  [ 0.0133  0.5289  0.6726  0.5551  0.5093  0.5654  0.6706  0.4979  0.2985
+  0.7187]
+Support vectors:
+ [[ 5.1  3.5  1.4  0.2 -1. ]
+ [ 4.9  3.   1.4  0.2 -1. ]
+ [ 4.7  3.2  1.3  0.2 -1. ]
+ [ 4.6  3.1  1.5  0.2 -1. ]
+ [ 5.   3.6  1.4  0.2 -1. ]
+ [ 5.4  3.9  1.7  0.4 -1. ]
+ [ 4.6  3.4  1.4  0.3 -1. ]
+ [ 5.   3.4  1.5  0.2 -1. ]
+ [ 4.4  2.9  1.4  0.2 -1. ]
+ [ 4.9  3.1  1.5  0.1 -1. ]]
+Bis:  -1.73399455878
+Accuracy:  0.753333333333
+
+
+-----------------------------------------------------------------------
+
+Concrete_Data_RNorm_Class
+C = 1
+Epsilon = 0.001
+Kernel = 0.001
 Support Vector Lagrange Multipliers:  [ 0.1245  0.0637  0.7042  0.578   0.956   0.5928  0.9531  0.2828  0.703
   0.8946]
 Support vectors:
@@ -13,3 +85,6 @@ Support vectors:
  [ 0.3094  0.6608  0.      0.8482  0.      0.3808  0.      0.739  -1.    ]]
 Bis:  -2.0895191297
 Accuracy:  0.991262135922
+
+
+In theory a higher C is produces a better separator. So we want to choose C as high as Possible.

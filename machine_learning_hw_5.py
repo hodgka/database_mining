@@ -76,18 +76,31 @@ def bias(g, x):
     # g[0] is a, g[1] is b
     # multiply g[1] by vector of ones so that you can add them together
     g_bar_values = g[0]*x + g[1]*np.ones(np.shape(x))
+    print("g_bar_values", g, g_bar_values)
     g_minus_f_squared = (g_bar_values - x*x)**2
     return np.sum(g_minus_f_squared)/N
 
 
-def var(g, x):
+def var(g, weights, x):
     '''
     calculate variance for Eout
     '''
-    x = np.concatenate((x[:, 0], x[:, 2]), axis=0)
+    # x = np.concatenate((x[:, 0], x[:, 2]), axis=0)
     N = np.shape(x)[0]
-    g_bar_squared = np.average(g[0]*x + g[1]*np.ones(np.shape(x))**2)
-    print(g_bar_squared)
+    # print(x)
+
+    # g_bar_squared = np.average(g[0]*x + g[1]*np.ones(np.shape(x)))**2
+    gk = 0
+
+    weights = weights - g
+    print(np.average(weights[:, 0]*x + weights[:, 1]*np.ones(np.shape(x))))
+    # for i in weights:
+    #     weights[i][0]**2 x**2 + 2*weights[i][0]*weights[i][1] * x +
+    #  weights[i][1]**2 * np.ones(np.shape(x))
+    # # print(g_squared - g_bar_squared)
+    # print("g_bar", g_bar_squared)
+    # print("squared", g_squared)
+    # print(np.var())
     return
 
 if __name__ == "__main__":
@@ -107,20 +120,19 @@ if __name__ == "__main__":
         data_points[i*points: (i+1)*points, :] = dataset
         weights[i*points: (i+1)*points, :] = calculate_g_weights(dataset)
     g_bar = g_avg(weights)
-
-    bias_value = bias(g_bar, dataset)
-    var_value = var(g_bar, dataset)
+    bias_value = bias(g_bar, data_points)
+    var_value = var(g_bar, weights, data_points)
     print(bias_value)
-    print(var_value)
-    # fig = plt.figure()
-    # plt.subplot(111)
-    # x = np.linspace(-1, 1, 500)
-    # y1 = average_hypothesis[0]*x + average_hypothesis[1] * np.ones(np.shape(x))
-    # y2 = x**2
-    # plt.plot(x, y1, 'r', label="g_bar")
-    # plt.plot(x, y2, 'b', label="f(x)")
-    # plt.legend()
-    # plt.show()
+    # print(var_value)
+    fig = plt.figure()
+    plt.subplot(111)
+    x = np.linspace(-1, 1, 500)
+    y1 = g_bar[0]*x + g_bar[1] * np.ones(np.shape(x))
+    y2 = x**2
+    plt.plot(x, y1, 'r', label="g(x)")
+    plt.plot(x, y2, 'b', label="f(x)")
+    plt.legend()
+    plt.show()
     # sample_bias = bias(average_hypothesis, dataset)
     # sample_var = var(average_hypothesis, dataset)
     # bias(data_range, g_weights)
