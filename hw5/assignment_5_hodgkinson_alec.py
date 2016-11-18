@@ -14,10 +14,10 @@ class Network:
         self.X = data[:, :-1]
         self.y = data[:, -1]
         # Initialize weights in [-0.1, 0.1]
-        self.w_h = np.random.uniform(0.1, 0.2, (N_h, len(self.X[0]) + 1)) - 0.2
-        self.w_o = np.random.uniform(0.1, 0.2, (N_o, N_h + 10)) - 0.2
-        self.w_h[:, 0] = 1
-        self.w_0[:, 0] = 1
+        self.w_hidden = np.random.uniform(0.1, 0.2, (N_h, len(self.X[0]) + 1)) - 0.2
+        self.w_out = np.random.uniform(0.1, 0.2, (N_o, N_h + 10)) - 0.2
+        self.w_hidden[:, 1] = 1
+        self.w_out[:, 0] = 1
 
     def _one_hot(self, y):
         '''
@@ -51,16 +51,30 @@ class Network:
     def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
-    # def _feed_forward(self, x):
+    def _delta(self, o):
+        delta_o = o * (1 - o) * (self.y - o)
 
-    # def _back_prop(self):
+    def _feed_forward(self, x):
+        self.hidden_values = self._sigmoid(np.dot(self.w_h, x))
+        self.output = self._sigmoid(np.dot(self.w_o, self.hidden_values))
+        ind = np.argmax(self.output)
+        self.output_vec = np.zeros(np.shape(output))
+        self.output_vec[ind] = 1
+
+    def _back_prop(self, x, y, y_hat):
+        delta_out = y_hat * (1 - y_hat) * (self.y - y_hat)
+        self.w_out += self.eta * delta_out * y_hat
+        delta_hidden = self.o_hidden * (1 - self.o_hidden) * np.dot(delta_out, self.w_out)
+        self.w_hidden += self.eta * delta_hidden * self.o_hidden
 
     def train(self, epochs):
         for epoch in range(epochs):
             # get indices of X/y in random order
             for i in np.random.permutation(np.arange(len(self.X))):
-                y_hat = self._feed_forward(x)
-                E = 0.5 * np.linalg.norm(y_hat - y)
+                y_hat = self._feed_forward(self.X[i])
+                E = 0.5 * np.linalg.norm(y_hat - self.y[i])
+                if E > 0:
+                    self._back_prop(self.X[i], self.y[i], y_hat)
 
     def predict(self, z):
         y_hat = self._feed_forward(z)
